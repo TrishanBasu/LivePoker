@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Table — Royal Felt Poker</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="bg-obsidian table-body">
+  <header class="topbar topbar-compact">
+    <div class="brand">
+      <span class="brand-suit">♠</span>
+      <div>
+        <h1 id="tableTitle">POKER TABLE</h1>
+        <span class="brand-sub" id="tableStakesLabel">Blinds 10/20 | Hand #0</span>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <span id="connPill" class="conn-pill conn-ok">Live</span>
+      <button id="hostPanelToggleBtn" class="btn btn-gold btn-sm hidden">Host Controls</button>
+      <button id="tableRulesBtn" class="btn btn-outline btn-sm">Rules</button>
+      <button id="leaveTableBtn" class="btn btn-danger btn-sm">Leave Table</button>
+    </div>
+  </header>
+
+  <div id="reconnectingOverlay" class="reconnect-banner hidden">
+    Connection interrupted — attempting automatic reconnection to restore your seat and chips...
+  </div>
+
+  <div id="tableErrorToast" class="error-toast hidden"></div>
+
+  <main class="table-layout">
+    <!-- CENTER POKER ARENA -->
+    <section class="arena-section">
+      <div class="poker-felt">
+        <!-- POT & BOARD -->
+        <div class="board-center">
+          <div class="pot-display">
+            <span class="pot-label">TOTAL POT</span>
+            <span id="mainPotValue" class="pot-amount">0</span>
+          </div>
+          <div id="sidePotsRow" class="side-pots-row"></div>
+          <div id="communityCardsRow" class="community-cards"></div>
+          <div id="phaseBadge" class="phase-badge">WAITING FOR HOST TO START</div>
+        </div>
+
+        <!-- 8 PLAYER SEATS -->
+        <div id="seatsLayer" class="seats-layer"></div>
+      </div>
+
+      <!-- PERSONAL HAND RANKING & WINNER BANNER -->
+      <div class="hud-strip">
+        <div class="personal-hand-box">
+          <span class="hud-label">YOUR BEST HAND</span>
+          <strong id="personalHandRank" class="hud-rank">Waiting for deal</strong>
+        </div>
+
+        <div id="winnerBanner" class="winner-banner hidden"></div>
+
+        <div class="turn-timer-box">
+          <span class="hud-label">TURN TIMER</span>
+          <strong id="turnTimerValue" class="timer-digits">--s</strong>
+        </div>
+      </div>
+
+      <!-- ACTION CONTROLS -->
+      <div id="actionBar" class="action-bar">
+        <div id="waitingTurnMsg" class="waiting-turn-msg">Waiting for hand action...</div>
+        <div id="actionButtonsGroup" class="action-buttons hidden">
+          <button id="btnFold" class="btn btn-fold">Fold</button>
+          <button id="btnCheck" class="btn btn-check">Check</button>
+          <button id="btnCall" class="btn btn-call">Call 0</button>
+          <div class="raise-control">
+            <input type="range" id="raiseSlider" min="20" max="1000" step="10" value="40" />
+            <input type="number" id="raiseInput" min="20" max="1000" step="10" value="40" />
+            <button id="btnRaise" class="btn btn-raise">Raise</button>
+          </div>
+          <button id="btnAllIn" class="btn btn-allin">All-In</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: ACTIVITY, HAND HISTORY, CHAT -->
+    <aside class="table-sidebar">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="activity">Activity</button>
+        <button class="tab-btn" data-tab="history">Hands</button>
+        <button class="tab-btn" data-tab="chat">Chat</button>
+      </div>
+
+      <div id="tab-activity" class="tab-panel active">
+        <div id="activityFeed" class="feed-list"></div>
+      </div>
+
+      <div id="tab-history" class="tab-panel">
+        <div id="handHistoryFeed" class="feed-list"></div>
+      </div>
+
+      <div id="tab-chat" class="tab-panel">
+        <div id="chatFeed" class="feed-list"></div>
+        <form id="chatForm" class="chat-form">
+          <input type="text" id="chatInput" maxlength="200" placeholder="Send table message..." />
+          <button type="submit" class="btn btn-gold btn-sm">Send</button>
+        </form>
+      </div>
+    </aside>
+  </main>
+
+  <!-- HOST ADMIN MODAL -->
+  <div id="hostModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Host Table Controls</h3>
+        <button id="closeHostModalBtn" class="icon-close">&times;</button>
+      </div>
+      <div class="modal-body stack-form">
+        <div class="host-game-btns">
+          <button id="hostStartGameBtn" class="btn btn-emerald">Start Game</button>
+          <button id="hostEndGameBtn" class="btn btn-danger">End Game</button>
+        </div>
+
+        <hr class="divider" />
+        <h4>Configure Table Stakes (Between Hands)</h4>
+        <div class="form-row-3">
+          <label>
+            <span>Starting Chips</span>
+            <input type="number" id="hostStartChips" min="50" value="1000" />
+          </label>
+          <label>
+            <span>Small Blind</span>
+            <input type="number" id="hostSB" min="1" value="10" />
+          </label>
+          <label>
+            <span>Big Blind</span>
+            <input type="number" id="hostBB" min="2" value="20" />
+          </label>
+        </div>
+        <button id="hostSaveStakesBtn" class="btn btn-gold btn-sm">Update Stakes</button>
+
+        <hr class="divider" />
+        <h4>Manage Seated Players</h4>
+        <div id="hostPlayersList" class="host-players-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RULES MODAL -->
+  <div id="rulesModal" class="modal hidden">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Texas Hold'em Hand Rankings & Rules</h3>
+        <button id="closeRulesBtn" class="icon-close">&times;</button>
+      </div>
+      <div class="modal-body rules-scroll">
+        <ol class="rankings-list">
+          <li><strong>Royal Flush:</strong> A-K-Q-J-10 suited.</li>
+          <li><strong>Straight Flush:</strong> 5 consecutive suited cards.</li>
+          <li><strong>Four of a Kind:</strong> 4 cards of the same rank.</li>
+          <li><strong>Full House:</strong> 3 of a kind + a pair.</li>
+          <li><strong>Flush:</strong> 5 cards of the same suit.</li>
+          <li><strong>Straight:</strong> 5 consecutive cards of mixed suits.</li>
+          <li><strong>Three of a Kind:</strong> 3 cards of the same rank.</li>
+          <li><strong>Two Pair:</strong> 2 distinct pairs + kicker.</li>
+          <li><strong>One Pair:</strong> 1 pair + 3 kickers.</li>
+          <li><strong>High Card:</strong> Highest card wins.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.ROOM_CODE = "{{ room_code }}";
+    window.TABLE_ID = "{{ table_id }}";
+    window.SERVER_BOOT_ID = "{{ boot_id }}";
+  </script>
+  <script src="/static/js/socket.js"></script>
+  <script src="/static/js/poker.js"></script>
+</body>
+</html>
