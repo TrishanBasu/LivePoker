@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Royal Felt — Private Multiplayer Texas Hold'em</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="bg-obsidian">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-suit">♠</span>
+      <div>
+        <h1>ROYAL FELT</h1>
+        <span class="brand-sub">PRIVATE NO-LIMIT HOLD'EM CLUB</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="openRulesBtn" class="btn btn-outline btn-sm">Poker Rules & Hand Rankings</button>
+    </div>
+  </header>
+
+  <main class="home-container">
+    <div id="restartBanner" class="alert-banner hidden">
+      The game server restarted or your previous room expired. Create or join a new private room below.
+    </div>
+
+    <div id="resumeSessionBanner" class="resume-banner hidden">
+      <div>
+        <strong>Active Session Detected</strong>
+        <p id="resumeSessionText">You have an active seat in room ...</p>
+      </div>
+      <div class="resume-actions">
+        <button id="resumeBtn" class="btn btn-gold btn-sm">Rejoin Active Session</button>
+        <button id="discardSessionBtn" class="btn btn-ghost btn-sm">Dismiss</button>
+      </div>
+    </div>
+
+    <section class="hero-intro">
+      <h2>Private High-Stakes Poker With Your Inner Circle</h2>
+      <p>
+        Create an invitation-only poker room with multiple independent 8-seat tables,
+        cryptographically shuffled decks, real-time side pots, and instant tab-refresh recovery.
+      </p>
+    </section>
+
+    <div class="home-grid">
+      <!-- CREATE ROOM CARD -->
+      <section class="card-panel">
+        <div class="panel-header">
+          <span class="badge badge-gold">HOST</span>
+          <h3>Create Private Room</h3>
+        </div>
+        <p class="panel-desc">Start a new private poker room, generate an invite link, and manage tables.</p>
+        <form id="createRoomForm" class="stack-form">
+          <label>
+            <span>Your Display Name</span>
+            <input type="text" id="createDisplayName" maxlength="20" placeholder="e.g., Arjun" required />
+          </label>
+          <label>
+            <span>Room Name (Optional)</span>
+            <input type="text" id="createRoomName" maxlength="40" placeholder="e.g., Friday Night Hold'em" />
+          </label>
+          <button type="submit" class="btn btn-gold btn-full">Create Private Room</button>
+        </form>
+      </section>
+
+      <!-- JOIN ROOM CARD -->
+      <section class="card-panel">
+        <div class="panel-header">
+          <span class="badge badge-green">PLAYER</span>
+          <h3>Join Private Room</h3>
+        </div>
+        <p class="panel-desc">Enter the 8-character room code shared by your host or open an invite link.</p>
+        <form id="joinRoomForm" class="stack-form">
+          <label>
+            <span>Room Code</span>
+            <input
+              type="text"
+              id="joinRoomCode"
+              maxlength="8"
+              value="{{ invite_code }}"
+              placeholder="e.g., K9X4M2PQ"
+              style="text-transform: uppercase; letter-spacing: 2px; font-weight: 700;"
+              required
+            />
+          </label>
+          <label>
+            <span>Your Display Name</span>
+            <input type="text" id="joinDisplayName" maxlength="20" placeholder="e.g., Vikram" required />
+          </label>
+          <button type="submit" class="btn btn-emerald btn-full">Enter Room Lobby</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="homeError" class="error-toast hidden"></div>
+  </main>
+
+  <!-- POKER RULEBOOK MODAL -->
+  <div id="rulesModal" class="modal hidden">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Texas Hold'em Rulebook & Hand Rankings</h3>
+        <button id="closeRulesBtn" class="icon-close">&times;</button>
+      </div>
+      <div class="modal-body rules-scroll">
+        <h4>1. Hand Rankings (Highest to Lowest)</h4>
+        <ol class="rankings-list">
+          <li><strong>Royal Flush:</strong> A-K-Q-J-10 all of the exact same suit. Unbeatable.</li>
+          <li><strong>Straight Flush:</strong> Five consecutive cards of the same suit (e.g., 9♠ 8♠ 7♠ 6♠ 5♠).</li>
+          <li><strong>Four of a Kind:</strong> All four cards of one rank (e.g., Q♠ Q♥ Q♦ Q♣ 4♠).</li>
+          <li><strong>Full House:</strong> Three cards of one rank plus a pair of another (e.g., K♠ K♦ K♣ 7♠ 7♥).</li>
+          <li><strong>Flush:</strong> Any five cards of the same suit, not in sequence. Highest card breaks ties.</li>
+          <li><strong>Straight:</strong> Five consecutive cards of mixed suits. Ace can play high (10-J-Q-K-A) or low (A-2-3-4-5).</li>
+          <li><strong>Three of a Kind:</strong> Three cards of the same rank plus two unrelated kickers.</li>
+          <li><strong>Two Pair:</strong> Two different pairs plus one kicker card.</li>
+          <li><strong>One Pair:</strong> Two cards of matching rank plus three highest kickers.</li>
+          <li><strong>High Card:</strong> When no pair or better is made, the highest card in your best 5-card hand plays.</li>
+        </ol>
+
+        <h4>2. Kickers & Tie-Breaking</h4>
+        <p>Every showdown compares the best 5-card hand out of your 2 private cards + 5 community cards. If two players hold the same pair or trips, the highest remaining side cards (<strong>kickers</strong>) decide the winner. If all 5 cards are identical in rank, the pot is split equally (<strong>Split Pot</strong>).</p>
+
+        <h4>3. Blinds, Betting Rounds & Actions</h4>
+        <ul class="rules-bullets">
+          <li><strong>Blinds:</strong> Forced bets posted before cards are dealt by the two players left of the Dealer Button (Small Blind & Big Blind).</li>
+          <li><strong>Rounds:</strong> Pre-Flop (2 hole cards) &rarr; Flop (3 board cards) &rarr; Turn (4th card) &rarr; River (5th card) &rarr; Showdown.</li>
+          <li><strong>Check:</strong> Pass action with 0 bet when no one has bet in the current round.</li>
+          <li><strong>Call:</strong> Match the current highest bet to stay in the hand.</li>
+          <li><strong>Bet / Raise:</strong> Put chips in to open betting or increase an existing bet.</li>
+          <li><strong>Fold:</strong> Discard your hand and forfeit any chips already contributed to the pot.</li>
+          <li><strong>All-In & Side Pots:</strong> If you bet all your remaining chips, you are eligible to win up to your contribution from every player. Extra chips bet by deeper stacks form a separate <strong>Side Pot</strong> contested only by those remaining players.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.SERVER_BOOT_ID = "{{ boot_id }}";
+  </script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
