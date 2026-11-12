@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lobby ({{ room_code }}) — Royal Felt Poker</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body class="bg-obsidian">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-suit">♠</span>
+      <div>
+        <h1 id="lobbyRoomTitle">ROYAL FELT LOBBY</h1>
+        <span class="brand-sub">ROOM CODE: <strong id="displayRoomCode">{{ room_code }}</strong></span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="connPill" class="conn-pill conn-ok">Connected</span>
+      <button id="copyInviteBtn" class="btn btn-gold btn-sm">Copy Invite Link</button>
+      <button id="leaveRoomBtn" class="btn btn-danger btn-sm">Leave Room</button>
+    </div>
+  </header>
+
+  <main class="lobby-container">
+    <div class="lobby-status-bar">
+      <div>
+        <span class="muted">Host:</span> <strong id="lobbyHostName">Loading...</strong>
+        <span class="sep">|</span>
+        <span class="muted">Players in Room:</span> <strong id="lobbyMemberCount">1</strong>
+      </div>
+      <div id="hostCreateTableWrapper" class="hidden">
+        <button id="openCreateTableModalBtn" class="btn btn-emerald btn-sm">+ Create New Table</button>
+      </div>
+    </div>
+
+    <div id="lobbyToast" class="toast-msg hidden"></div>
+
+    <section id="tablesGrid" class="tables-grid">
+      <div class="empty-state">Connecting to private room...</div>
+    </section>
+  </main>
+
+  <!-- HOST CREATE TABLE MODAL -->
+  <div id="createTableModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Create Independent Poker Table</h3>
+        <button id="closeCreateTableModalBtn" class="icon-close">&times;</button>
+      </div>
+      <form id="createTableForm" class="stack-form modal-body">
+        <label>
+          <span>Table Name</span>
+          <input type="text" id="newTableName" maxlength="32" placeholder="e.g., High Rollers Table" required />
+        </label>
+        <div class="form-row-3">
+          <label>
+            <span>Starting Chips</span>
+            <input type="number" id="newTableChips" min="100" max="1000000" value="1000" required />
+          </label>
+          <label>
+            <span>Small Blind</span>
+            <input type="number" id="newTableSB" min="1" max="50000" value="10" required />
+          </label>
+          <label>
+            <span>Big Blind</span>
+            <input type="number" id="newTableBB" min="2" max="100000" value="20" required />
+          </label>
+        </div>
+        <button type="submit" class="btn btn-gold btn-full">Create Table</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    window.ROOM_CODE = "{{ room_code }}";
+    window.SERVER_BOOT_ID = "{{ boot_id }}";
+  </script>
+  <script src="/static/js/socket.js"></script>
+  <script src="/static/js/lobby.js"></script>
+</body>
+</html>
